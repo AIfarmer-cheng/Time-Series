@@ -1,0 +1,16 @@
+﻿filename,sentence,length,rows,source_files
+sentence_000.csv,我爱中国,4,320,我_000.csv|爱_000.csv|中_000.csv|国_000.csv
+sentence_001.csv,中国文字,4,320,中_000.csv|国_000.csv|文_000.csv|字_000.csv
+sentence_002.csv,我们的家,4,320,我_000.csv|们_000.csv|的_000.csv|家_000.csv
+sentence_003.csv,书中有字,4,320,书_000.csv|中_000.csv|有_000.csv|字_000.csv
+sentence_004.csv,天上有云,4,320,天_000.csv|上_000.csv|有_000.csv|云_000.csv
+sentence_005.csv,学中文好,4,320,学_000.csv|中_000.csv|文_000.csv|好_000.csv
+sentence_006.csv,我要学字,4,320,我_000.csv|要_000.csv|学_000.csv|字_000.csv
+sentence_007.csv,火红的日,4,320,火_000.csv|红_000.csv|的_000.csv|日_000.csv
+sentence_008.csv,他们在学,4,320,他_000.csv|们_000.csv|在_000.csv|学_000.csv
+sentence_009.csv,白云和红日,5,400,白_000.csv|云_000.csv|和_000.csv|红_000.csv|日_000.csv
+sentence_010.csv,中国山水好,5,400,中_000.csv|国_000.csv|山_000.csv|水_000.csv|好_000.csv
+sentence_011.csv,人们说中文,5,400,人_000.csv|们_000.csv|说_000.csv|中_000.csv|文_000.csv
+sentence_012.csv,我们会写字,5,400,我_000.csv|们_000.csv|会_000.csv|写_000.csv|字_000.csv
+sentence_013.csv,水和火,3,240,水_000.csv|和_000.csv|火_000.csv
+sentence_014.csv,好生活,3,240,好_000.csv|生_000.csv|活_000.csv

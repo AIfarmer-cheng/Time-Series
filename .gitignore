@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ====================
+# LLM Models (约3GB)
+# ====================
+models/
+
+# ====================
+# Datasets (不传)
+# ====================
+chinese_radar_dataset/data/
+sentence_test_dataset/data/
+
+# ====================
+# Model Weights (不传)
+# ====================
+model/*.pth
+model/*.pkl
+model/*.pt
+model/*.h5
+model/*.ckpt
+model/*.onnx
+model/*.safetensors
+model/*.bin
+model/*.zip
+
+# ====================
+# Training Artifacts (不传)
+# ====================
+model/config.json
+model/training_history*.png
+model/confusion_matrix*.png
+
+# ====================
+# Results (不传)
+# ====================
+results/
+/prediction_results.json
+/llm_correction_results.json
+
+# ====================
+# Reference Models (不传)
+# ====================
+图像分类系列模型/
+
+# ====================
+# Archives (不传)
+# ====================
+*.zip
+*.7z
+*.rar
+*.tar.gz
+
+#
