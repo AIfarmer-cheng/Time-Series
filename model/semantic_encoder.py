@@ -1,8 +1,8 @@
 """
-汉字语义编码器 — 精简版
+汉字语义编码器 — 无标签泄露
 =======================
-从预生成的JSON加载100个汉字的语言学特征，将6个维度各自嵌入为token，
-输出(B, 6, d_model)供Cross-Attention使用。
+从预生成的JSON加载100个汉字的语言学特征，预计算所有类别的语义原型向量。
+推理时不需要传入目标标签，所有类别的语义信息在初始化时已准备好。
 
 六大维度: 拼音、声母、韵母、声调、部首、笔画数
 """
@@ -15,8 +15,10 @@ from pathlib import Path
 
 
 class SemanticEncoder(nn.Module):
-    def __init__(self, d_model: int = 256, features_json: str = None):
+    def __init__(self, d_model: int = 256, num_classes: int = 100, features_json: str = None):
         super().__init__()
+        self.d_model = d_model
+        self.num_classes = num_classes
 
         # ---- 加载特征数据库 ----
         if features_json is None:
@@ -63,41 +65,47 @@ class SemanticEncoder(nn.Module):
                      self.tone_embed, self.radical_embed, self.stroke_embed]:
             nn.init.trunc_normal_(emb.weight, std=0.02)
 
-    def forward(self, char_indices: torch.Tensor) -> torch.Tensor:
-        """char_indices: (B,) 类别标签0-99 → 语义tokens: (B, 6, d_model)"""
-        B = char_indices.shape[0] # 0-99的序号
-        device = char_indices.device
+        # ---- 预计算所有类别的语义原型向量 ----
+        # 根据char_features.json，在初始化时为每个类别生成语义向量
+        # 这些向量作为可学习参数，在训练中优化
+        prototypes = self._build_prototypes()  # (num_classes, d_model)
+        self.class_prototypes = nn.Parameter(prototypes, requires_grad=True)
 
-        # 批量收集各维度索引
-        batch_pinyin = torch.zeros(B, dtype=torch.long, device=device)
-        batch_init = torch.zeros(B, dtype=torch.long, device=device)
-        batch_final = torch.zeros(B, dtype=torch.long, device=device)
-        batch_tone = torch.zeros(B, dtype=torch.long, device=device)
-        batch_rad = torch.zeros(B, dtype=torch.long, device=device)
-        batch_strk = torch.zeros(B, dtype=torch.long, device=device)
-
-        for i in range(B):
-            cid = char_indices[i].item()
+    def _build_prototypes(self):
+        """根据知识库预计算所有类别的语义原型向量"""
+        prototypes = []
+        for cid in range(self.num_classes):
             feats = self._feat_idx.get(cid, self._feat_idx.get(0))
-            batch_pinyin[i] = feats['pinyin']
-            batch_init[i] = feats['initial'] # 找到第i个汉字的声母索引
-            batch_final[i] = feats['final']
-            batch_tone[i] = feats['tone']
-            batch_rad[i] = feats['radical']
-            batch_strk[i] = feats['stroke']
 
-        # 6路嵌入，将一个索引值embedding成d_model的向量
-        tok_pinyin  = self.pinyin_embed(batch_pinyin)          # (B, d_model)
-        tok_initial = self.initial_embed(batch_init)            # (B, d_model)
-        tok_final   = self.final_embed(batch_final)             # (B, d_model)
-        tok_tone    = self.tone_embed(batch_tone)               # (B, d_model)
-        tok_radical = self.radical_embed(batch_rad)             # (B, d_model)
-        tok_stroke  = self.stroke_embed(batch_strk)             # (B, d_model)
+            # 各维度索引
+            pinyin_idx  = torch.tensor(feats['pinyin'])
+            initial_idx = torch.tensor(feats['initial'])
+            final_idx   = torch.tensor(feats['final'])
+            tone_idx    = torch.tensor(feats['tone'])
+            radical_idx = torch.tensor(feats['radical'])
+            stroke_idx  = torch.tensor(feats['stroke'])
 
-        # 堆叠为6个语义token
-        tokens = torch.stack([
-            tok_pinyin, tok_initial, tok_final,
-            tok_tone, tok_radical, tok_stroke
-        ], dim=1)                                               # (B, 6, d_model)
+            # 过Embedding层
+            tok_pinyin  = self.pinyin_embed(pinyin_idx)   # (d_model,)
+            tok_initial = self.initial_embed(initial_idx)   # (d_model,)
+            tok_final   = self.final_embed(final_idx)       # (d_model,)
+            tok_tone    = self.tone_embed(tone_idx)         # (d_model,)
+            tok_radical = self.radical_embed(radical_idx)   # (d_model,)
+            tok_stroke  = self.stroke_embed(stroke_idx)     # (d_model,)
 
-        return tokens
+            # 6个token聚合为1个类别原型向量（平均）
+            proto = torch.stack([
+                tok_pinyin, tok_initial, tok_final,
+                tok_tone, tok_radical, tok_stroke
+            ], dim=0).mean(dim=0)  # (d_model,)
+
+            prototypes.append(proto)
+
+        return torch.stack(prototypes, dim=0)  # (num_classes, d_model)
+
+    def forward(self) -> torch.Tensor:
+        """返回所有类别的语义原型向量: (num_classes, d_model)
+        
+        不需要传入任何标签！所有类别的语义信息在初始化时已预计算好。
+        """
+        return self.class_prototypes  # (num_classes, d_model)
