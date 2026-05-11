@@ -416,7 +416,7 @@ def create_model(model_type, num_classes):
         )
         model.model_name = 'gru'
     elif model_type.lower() == 'radar_tfnet':
-        
+
         model.model_name = 'radar_tfnet'
     elif model_type.lower() == 'resnet': # 夯
         model = resnet34(num_classes=num_classes, include_top=True, input_channels=2)
